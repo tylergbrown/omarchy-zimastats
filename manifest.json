@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "tb.zima",
   "name": "Omarchy Zima Stats",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "author": "tb",
   "description": "LAN SSH stats for Brown-01 and Brown-02 ZimaOS NAS: connection, CPU throttle gauge, memory bar, storage pies, and double-confirm reboot.",
   "kinds": [

@@ -50,6 +50,23 @@ BarWidget {
     return text
   }
 
+  // Full LAN hostname from status.py when it differs from the short Brown-0x label.
+  function extendedName(name) {
+    var text = String(name || "").trim()
+    if (text === "") return ""
+    var short = shortName(text)
+    if (text === short) return ""
+    return text
+  }
+
+  function cardHeading(client) {
+    var short = shortName(client && client.name ? client.name : "")
+    var ext = extendedName(client && client.name ? client.name : "")
+    var status = wordFor(client && client.status ? client.status : "")
+    if (ext !== "") return short + " · " + ext + " · " + status
+    return short + " · " + status
+  }
+
   function clientById(id) {
     for (var i = 0; i < clients.length; i++) {
       if (clients[i] && clients[i].id === id) return clients[i]
@@ -505,7 +522,7 @@ BarWidget {
                 }
                 Text {
                   anchors.verticalCenter: parent.verticalCenter
-                  text: root.shortName(modelData.name || "") + " · " + root.wordFor(modelData.status)
+                  text: root.cardHeading(modelData)
                   color: Color.popups.text
                   font.family: root.bar ? root.bar.fontFamily : Style.font.family
                   font.pixelSize: Style.font.body
