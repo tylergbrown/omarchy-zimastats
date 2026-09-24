@@ -405,12 +405,37 @@ BarWidget {
     bar: root.bar
     owner: root
     open: root.popupOpen
-    contentWidth: popup.fittedContentWidth(Style.space(520))
-    contentHeight: popup.fittedContentHeight(bodyCol.implicitHeight, Style.space(560))
+    contentWidth: popup.fittedContentWidth(Style.space(390))
+    contentHeight: popup.fittedContentHeight(bodyCol.implicitHeight, Style.space(420))
+
+    // Soft vertical wash over the card content area
+    Rectangle {
+      anchors.fill: parent
+      z: 0
+      gradient: Gradient {
+        GradientStop {
+          position: 0.0
+          color: Qt.rgba(
+            Math.min(1, Color.popups.background.r + 0.07),
+            Math.min(1, Color.popups.background.g + 0.07),
+            Math.min(1, Color.popups.background.b + 0.09),
+            1)
+        }
+        GradientStop {
+          position: 1.0
+          color: Qt.rgba(
+            Math.max(0, Color.popups.background.r * 0.82),
+            Math.max(0, Color.popups.background.g * 0.82),
+            Math.max(0, Color.popups.background.b * 0.86),
+            1)
+        }
+      }
+    }
 
     Flickable {
       id: bodyScroll
       anchors.fill: parent
+      z: 1
       contentWidth: width
       contentHeight: bodyCol.implicitHeight
       clip: true
@@ -421,11 +446,11 @@ BarWidget {
       Column {
         id: bodyCol
         width: bodyScroll.width
-        spacing: Style.space(10)
+        spacing: Style.space(7)
 
         Column {
           width: parent.width
-          spacing: Style.space(4)
+          spacing: Style.space(2)
 
           Item {
             width: parent.width
@@ -471,9 +496,9 @@ BarWidget {
             required property var modelData
             property var storageHost: modelData
             width: bodyCol.width
-            implicitHeight: cardCol.implicitHeight + Style.space(20)
-            radius: Style.space(8)
-            color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.06)
+            implicitHeight: cardCol.implicitHeight + Style.space(14)
+            radius: Style.space(6)
+            color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.08)
             border.width: 1
             border.color: root.toneFor(modelData.status)
 
@@ -482,15 +507,15 @@ BarWidget {
               anchors.left: parent.left
               anchors.right: parent.right
               anchors.top: parent.top
-              anchors.margins: Style.space(10)
-              spacing: Style.space(8)
+              anchors.margins: Style.space(7)
+              spacing: Style.space(6)
 
               Row {
-                spacing: Style.space(8)
+                spacing: Style.space(6)
                 Rectangle {
                   anchors.verticalCenter: parent.verticalCenter
-                  width: Style.space(8)
-                  height: Style.space(8)
+                  width: Style.space(6)
+                  height: Style.space(6)
                   radius: width / 2
                   color: root.toneFor(modelData.status)
                 }
@@ -507,20 +532,20 @@ BarWidget {
 
               Row {
                 width: parent.width
-                spacing: Style.space(6)
+                spacing: Style.space(4)
 
                 Rectangle {
-                  width: (cardCol.width - Style.space(6)) / 2
-                  height: Style.space(78)
-                  radius: Style.space(6)
+                  width: (cardCol.width - Style.space(4)) / 2
+                  height: Style.space(58)
+                  radius: Style.space(5)
                   color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.06)
                   border.width: 1
                   border.color: Color.popups.border
 
                   Column {
                     anchors.fill: parent
-                    anchors.margins: Style.space(6)
-                    spacing: Style.space(2)
+                    anchors.margins: Style.space(5)
+                    spacing: Style.space(1)
 
                     Text {
                       width: parent.width
@@ -535,12 +560,12 @@ BarWidget {
 
                     Row {
                       width: parent.width
-                      spacing: Style.space(8)
+                      spacing: Style.space(6)
 
                       Canvas {
                         id: cpuGauge
-                        width: Style.space(48)
-                        height: Style.space(40)
+                        width: Style.space(36)
+                        height: Style.space(30)
                         antialiasing: true
                         property real pct: root.cpuPct(modelData)
                         property color tone: root.cpuColor(modelData)
@@ -566,17 +591,17 @@ BarWidget {
                 }
 
                 Rectangle {
-                  width: (cardCol.width - Style.space(6)) / 2
-                  height: Style.space(78)
-                  radius: Style.space(6)
+                  width: (cardCol.width - Style.space(4)) / 2
+                  height: Style.space(58)
+                  radius: Style.space(5)
                   color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.06)
                   border.width: 1
                   border.color: Color.popups.border
 
                   Column {
                     anchors.fill: parent
-                    anchors.margins: Style.space(6)
-                    spacing: Style.space(4)
+                    anchors.margins: Style.space(5)
+                    spacing: Style.space(3)
 
                     Text {
                       width: parent.width
@@ -602,7 +627,7 @@ BarWidget {
 
                     Rectangle {
                       width: parent.width
-                      height: Style.space(6)
+                      height: Style.space(5)
                       radius: height / 2
                       color: Qt.rgba(1, 1, 1, 0.12)
                       visible: modelData.status === "online"
@@ -627,7 +652,7 @@ BarWidget {
               Column {
                 visible: root.showStorage(modelData)
                 width: parent.width
-                spacing: Style.space(4)
+                spacing: Style.space(3)
 
                 Text {
                   width: parent.width
@@ -642,16 +667,23 @@ BarWidget {
 
                 Flow {
                   width: parent.width
-                  spacing: Style.space(6)
+                  spacing: Style.space(4)
 
                   Repeater {
                     model: root.storageRows(modelData)
                     delegate: Rectangle {
                       required property var modelData
                       property var row: modelData
-                      width: Math.max(Style.space(110), pieRow.implicitWidth + Style.space(14))
-                      height: Style.space(44)
-                      radius: Style.space(6)
+                      width: {
+                        var rows = root.storageRows(storageHost)
+                        var n = Math.max(1, rows.length)
+                        var gap = Style.space(4)
+                        // parent is the Flow — stretch chips across the card
+                        var fill = (parent.width - gap * (n - 1)) / n
+                        return Math.max(Style.space(88), fill)
+                      }
+                      height: Style.space(34)
+                      radius: Style.space(5)
                       color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.06)
                       border.width: 1
                       border.color: Color.popups.border
@@ -660,13 +692,13 @@ BarWidget {
                         id: pieRow
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.left: parent.left
-                        anchors.leftMargin: Style.space(6)
-                        spacing: Style.space(6)
+                        anchors.leftMargin: Style.space(5)
+                        spacing: Style.space(5)
 
                         Canvas {
                           id: storagePie
-                          width: Style.space(30)
-                          height: Style.space(30)
+                          width: Style.space(22)
+                          height: Style.space(22)
                           antialiasing: true
                           property real pct: Number(row && row.pct !== undefined ? row.pct : 0)
                           property color tone: root.storageRowColor(row, storageHost)
@@ -689,7 +721,7 @@ BarWidget {
                             font.pixelSize: Style.font.caption
                             font.bold: true
                             elide: Text.ElideRight
-                            width: Style.space(72)
+                            width: Style.space(56)
                             renderType: Text.NativeRendering
                           }
 
@@ -704,7 +736,7 @@ BarWidget {
                             font.family: root.bar ? root.bar.fontFamily : Style.font.family
                             font.pixelSize: Style.font.caption
                             elide: Text.ElideRight
-                            width: Style.space(72)
+                            width: Style.space(56)
                             renderType: Text.NativeRendering
                           }
                         }
@@ -714,8 +746,8 @@ BarWidget {
 
                   Rectangle {
                     visible: root.storageRows(storageHost).length === 0 && storageHost && storageHost.status === "online"
-                    width: Style.space(72)
-                    height: Style.space(44)
+                    width: parent.width
+                    height: Style.space(34)
                     radius: Style.space(6)
                     color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.06)
                     border.width: 1
@@ -757,7 +789,7 @@ BarWidget {
               }
 
               Row {
-                spacing: Style.space(8)
+                spacing: Style.space(6)
                 Button {
                   text: root.restartingId === modelData.id ? "Restarting" : (root.armedId === modelData.id ? "Restart now" : "Restart")
                   enabled: modelData.status === "online" && root.restartingId === ""
@@ -796,7 +828,7 @@ BarWidget {
           onClicked: root.poll()
         }
 
-        Item { width: 1; height: Style.space(8) }
+        Item { width: 1; height: Style.space(4) }
       }
     }
   }
