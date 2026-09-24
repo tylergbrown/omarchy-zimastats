@@ -604,7 +604,7 @@ BarWidget {
                       width: parent.width
                       height: Style.space(6)
                       radius: height / 2
-                      color: "rgba(255,255,255,0.12)"
+                      color: Qt.rgba(1, 1, 1, 0.12)
                       visible: modelData.status === "online"
 
                       Rectangle {
