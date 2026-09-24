@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "id": "tb.zima",
   "name": "Omarchy Zima Stats",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "tb",
-  "description": "LAN SSH stats for Brown-01 and Brown-02 ZimaOS NAS: connection, power, CPU, memory, storage, and double-confirm reboot.",
+  "description": "LAN SSH stats for Brown-01 and Brown-02 ZimaOS NAS: connection, CPU throttle gauge, memory bar, storage pie chips, and double-confirm reboot.",
   "kinds": [
     "bar-widget"
   ],
@@ -13,7 +13,7 @@
   },
   "barWidget": {
     "displayName": "Zima Stats",
-    "description": "Omarchy Zima Stats \u2014 Brown-01/02 NAS status on the bar.",
+    "description": "Omarchy Zima Stats \u2014 Brown-01/02 NAS status with storage pies and CPU gauges.",
     "category": "Info",
     "allowMultiple": false,
     "defaultSection": "left",

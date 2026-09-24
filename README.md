@@ -2,10 +2,11 @@
 
 Omarchy **bar widget** for Brown-01 and Brown-02 ZimaOS NAS boxes on the LAN.
 
-Shows dual status dots on the bar, per-host latency / power / CPU / memory tiles, storage usage, and a double-confirm reboot over SSH.
+Shows dual status dots on the bar, per-host **CPU throttle gauges**, **memory** usage bars, **storage donut pies**, and a double-confirm reboot over SSH.
 
 - Plugin id: `tb.zima` (Omarchy install folder name)
 - Repo: `omarchy-zimastats`
+- Version: **1.2.0**
 
 ## Install
 
@@ -46,10 +47,11 @@ The plugin uses `~/.ssh/id_ed25519` (or your agent) from the Omarchy machine.
 ## Files
 
 - `manifest.json` — Omarchy plugin metadata and settings schema
-- `Widget.qml` — bar chip + popup UI
+- `Widget.qml` — bar chip + popup UI (CPU gauge, memory bar, storage pies)
 - `status.py` — LAN/SSH metrics and reboot helpers
 
 ## Notes
 
 - Restart is double-confirm and reboots that NAS host over SSH.
 - Requires Omarchy / Quickshell bar widgets (`BarWidget`, `PopupCard`, `qs.Commons`, `qs.Ui`).
+- v1.2.0 replaces Latency/Power tiles with storage pie chips and adds a CPU throttle gauge.

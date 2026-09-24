@@ -113,7 +113,7 @@ BarWidget {
     if (!client || client.status !== "online") return Color.muted
     var amount = Number(client.cpu_pct)
     if (isFinite(amount) && amount >= 90) return "#e24b4b"
-    return Color.popups.text
+    return "#3cba7a"
   }
 
   function memoryText(client) {
@@ -156,6 +156,94 @@ BarWidget {
       if (rows[i].fault) return "#e24b4b"
     }
     return Color.popups.text
+  }
+
+  function cpuPct(client) {
+    if (!client || client.status !== "online") return -1
+    var amount = Number(client.cpu_pct)
+    if (!isFinite(amount)) return -1
+    return Math.max(0, Math.min(100, amount))
+  }
+
+  function memoryPct(client) {
+    if (!client || client.status !== "online" || !client.memory) return -1
+    var amount = Number(client.memory.pct)
+    if (!isFinite(amount)) return -1
+    return Math.max(0, Math.min(100, amount))
+  }
+
+  function storageRowColor(row, client) {
+    if (!client || client.status !== "online") return Color.muted
+    if (row && row.fault) return "#e24b4b"
+    return "#3cba7a"
+  }
+
+  function paintThrottle(canvas, pct, color) {
+    var ctx = canvas.getContext("2d")
+    var w = canvas.width
+    var h = canvas.height
+    ctx.clearRect(0, 0, w, h)
+    if (w < 2 || h < 2) return
+    var cx = w / 2
+    var cy = h * 0.62
+    var r = Math.min(w, h) * 0.40
+    var start = Math.PI * 0.75
+    var fullSweep = Math.PI * 1.5
+    ctx.lineWidth = 4.5
+    ctx.lineCap = "round"
+    ctx.beginPath()
+    ctx.strokeStyle = "rgba(255,255,255,0.12)"
+    ctx.arc(cx, cy, r, start, start + fullSweep, false)
+    ctx.stroke()
+    var amount = Number(pct)
+    if (!isFinite(amount) || amount < 0) return
+    amount = Math.max(0, Math.min(100, amount))
+    if (amount <= 0) return
+    var end = start + fullSweep * (amount / 100)
+    ctx.beginPath()
+    ctx.strokeStyle = color || "#3cba7a"
+    ctx.arc(cx, cy, r, start, end, false)
+    ctx.stroke()
+    var nx = cx + Math.cos(end) * r
+    var ny = cy + Math.sin(end) * r
+    ctx.beginPath()
+    ctx.fillStyle = color || "#3cba7a"
+    ctx.arc(nx, ny, 2.4, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  function paintPie(canvas, pct, color) {
+    var ctx = canvas.getContext("2d")
+    var w = canvas.width
+    var h = canvas.height
+    ctx.clearRect(0, 0, w, h)
+    if (w < 2 || h < 2) return
+    var cx = w / 2
+    var cy = h / 2
+    var outer = Math.min(w, h) * 0.46
+    var inner = outer * 0.55
+    var mid = (outer + inner) / 2
+    var lineW = Math.max(2, outer - inner)
+    var start = -Math.PI / 2
+    var amount = Number(pct)
+    if (!isFinite(amount)) amount = 0
+    amount = Math.max(0, Math.min(100, amount))
+    var used = Math.PI * 2 * (amount / 100)
+    ctx.lineWidth = lineW
+    ctx.lineCap = "butt"
+    ctx.beginPath()
+    ctx.strokeStyle = "rgba(255,255,255,0.12)"
+    if (amount < 100)
+      ctx.arc(cx, cy, mid, start + used, start + Math.PI * 2, false)
+    else
+      ctx.arc(cx, cy, mid, 0, Math.PI * 2, false)
+    ctx.stroke()
+    if (amount > 0) {
+      ctx.beginPath()
+      ctx.strokeStyle = color || "#3cba7a"
+      ctx.arc(cx, cy, mid, start, start + used, false)
+      ctx.stroke()
+    }
   }
 
   function connectionDetail(client) {
@@ -381,6 +469,7 @@ BarWidget {
           model: root.shownClients
           delegate: Rectangle {
             required property var modelData
+            property var storageHost: modelData
             width: bodyCol.width
             implicitHeight: cardCol.implicitHeight + Style.space(20)
             radius: Style.space(8)
@@ -416,69 +505,119 @@ BarWidget {
                 }
               }
 
-              Grid {
+              Row {
                 width: parent.width
-                columns: 2
-                columnSpacing: Style.space(6)
-                rowSpacing: Style.space(6)
+                spacing: Style.space(6)
 
-                Repeater {
-                  model: [
-                    {
-                      label: "Latency",
-                      value: root.latencyText(modelData),
-                      color: modelData.status === "online" ? Color.popups.text : Color.muted
-                    },
-                    {
-                      label: "Power",
-                      value: root.metricText(modelData, root.powerText(modelData)),
-                      color: modelData.status === "online" ? Color.popups.text : Color.muted
-                    },
-                    {
-                      label: "CPU",
-                      value: root.metricText(modelData, root.cpuText(modelData)),
-                      color: root.cpuColor(modelData)
-                    },
-                    {
-                      label: "Memory",
-                      value: root.memoryText(modelData),
-                      color: root.memoryColor(modelData)
+                Rectangle {
+                  width: (cardCol.width - Style.space(6)) / 2
+                  height: Style.space(78)
+                  radius: Style.space(6)
+                  color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.06)
+                  border.width: 1
+                  border.color: Color.popups.border
+
+                  Column {
+                    anchors.fill: parent
+                    anchors.margins: Style.space(6)
+                    spacing: Style.space(2)
+
+                    Text {
+                      width: parent.width
+                      text: "CPU"
+                      color: Color.muted
+                      font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                      font.pixelSize: Style.font.caption
+                      font.capitalization: Font.AllUppercase
+                      elide: Text.ElideRight
+                      renderType: Text.NativeRendering
                     }
-                  ]
-                  delegate: Rectangle {
-                    required property var modelData
-                    width: (cardCol.width - Style.space(6)) / 2
-                    height: Style.space(60)
-                    radius: Style.space(6)
-                    color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.06)
-                    border.width: 1
-                    border.color: Color.popups.border
 
-                    Column {
-                      anchors.fill: parent
-                      anchors.margins: Style.space(6)
-                      spacing: Style.space(2)
+                    Row {
+                      width: parent.width
+                      spacing: Style.space(8)
 
-                      Text {
-                        width: parent.width
-                        text: modelData.label
-                        color: Color.muted
-                        font.family: root.bar ? root.bar.fontFamily : Style.font.family
-                        font.pixelSize: Style.font.caption
-                        font.capitalization: Font.AllUppercase
-                        elide: Text.ElideRight
-                        renderType: Text.NativeRendering
+                      Canvas {
+                        id: cpuGauge
+                        width: Style.space(48)
+                        height: Style.space(40)
+                        antialiasing: true
+                        property real pct: root.cpuPct(modelData)
+                        property color tone: root.cpuColor(modelData)
+                        onPctChanged: requestPaint()
+                        onToneChanged: requestPaint()
+                        onWidthChanged: requestPaint()
+                        onHeightChanged: requestPaint()
+                        Component.onCompleted: requestPaint()
+                        onPaint: root.paintThrottle(cpuGauge, pct, tone)
                       }
 
                       Text {
-                        width: parent.width
-                        text: modelData.value
-                        color: modelData.color
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.metricText(modelData, root.cpuText(modelData))
+                        color: root.cpuColor(modelData)
                         font.family: root.bar ? root.bar.fontFamily : Style.font.family
                         font.pixelSize: Style.font.body
                         font.bold: true
-                        elide: Text.ElideRight
                         renderType: Text.NativeRendering
+                      }
+                    }
+                  }
+                }
+
+                Rectangle {
+                  width: (cardCol.width - Style.space(6)) / 2
+                  height: Style.space(78)
+                  radius: Style.space(6)
+                  color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.06)
+                  border.width: 1
+                  border.color: Color.popups.border
+
+                  Column {
+                    anchors.fill: parent
+                    anchors.margins: Style.space(6)
+                    spacing: Style.space(4)
+
+                    Text {
+                      width: parent.width
+                      text: "Memory"
+                      color: Color.muted
+                      font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                      font.pixelSize: Style.font.caption
+                      font.capitalization: Font.AllUppercase
+                      elide: Text.ElideRight
+                      renderType: Text.NativeRendering
+                    }
+
+                    Text {
+                      width: parent.width
+                      text: root.memoryText(modelData)
+                      color: root.memoryColor(modelData)
+                      font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                      font.pixelSize: Style.font.body
+                      font.bold: true
+                      elide: Text.ElideRight
+                      renderType: Text.NativeRendering
+                    }
+
+                    Rectangle {
+                      width: parent.width
+                      height: Style.space(6)
+                      radius: height / 2
+                      color: "rgba(255,255,255,0.12)"
+                      visible: modelData.status === "online"
+
+                      Rectangle {
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                        width: {
+                          var pct = root.memoryPct(modelData)
+                          if (pct < 0) return 0
+                          return parent.width * (pct / 100)
+                        }
+                        radius: height / 2
+                        color: root.memoryColor(modelData)
                       }
                     }
                   }
@@ -488,7 +627,7 @@ BarWidget {
               Column {
                 visible: root.showStorage(modelData)
                 width: parent.width
-                spacing: Style.space(2)
+                spacing: Style.space(4)
 
                 Text {
                   width: parent.width
@@ -501,14 +640,97 @@ BarWidget {
                   renderType: Text.NativeRendering
                 }
 
-                Text {
+                Flow {
                   width: parent.width
-                  text: root.storageLine(modelData) || (modelData.status === "online" ? "—" : "")
-                  color: root.storageColor(modelData)
-                  font.family: root.bar ? root.bar.fontFamily : Style.font.family
-                  font.pixelSize: Style.font.caption
-                  wrapMode: Text.WordWrap
-                  renderType: Text.NativeRendering
+                  spacing: Style.space(6)
+
+                  Repeater {
+                    model: root.storageRows(modelData)
+                    delegate: Rectangle {
+                      required property var modelData
+                      property var row: modelData
+                      width: Math.max(Style.space(110), pieRow.implicitWidth + Style.space(14))
+                      height: Style.space(44)
+                      radius: Style.space(6)
+                      color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.06)
+                      border.width: 1
+                      border.color: Color.popups.border
+
+                      Row {
+                        id: pieRow
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        anchors.leftMargin: Style.space(6)
+                        spacing: Style.space(6)
+
+                        Canvas {
+                          id: storagePie
+                          width: Style.space(30)
+                          height: Style.space(30)
+                          antialiasing: true
+                          property real pct: Number(row && row.pct !== undefined ? row.pct : 0)
+                          property color tone: root.storageRowColor(row, storageHost)
+                          onPctChanged: requestPaint()
+                          onToneChanged: requestPaint()
+                          onWidthChanged: requestPaint()
+                          onHeightChanged: requestPaint()
+                          Component.onCompleted: requestPaint()
+                          onPaint: root.paintPie(storagePie, pct, tone)
+                        }
+
+                        Column {
+                          anchors.verticalCenter: parent.verticalCenter
+                          spacing: 0
+
+                          Text {
+                            text: row && row.name ? row.name : "—"
+                            color: Color.popups.text
+                            font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                            font.pixelSize: Style.font.caption
+                            font.bold: true
+                            elide: Text.ElideRight
+                            width: Style.space(72)
+                            renderType: Text.NativeRendering
+                          }
+
+                          Text {
+                            text: {
+                              if (!row) return "—"
+                              var pct = Number(row.pct)
+                              if (isFinite(pct)) return Math.round(pct) + "%"
+                              return row.text || "—"
+                            }
+                            color: root.storageRowColor(row, storageHost)
+                            font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                            font.pixelSize: Style.font.caption
+                            elide: Text.ElideRight
+                            width: Style.space(72)
+                            renderType: Text.NativeRendering
+                          }
+                        }
+                      }
+                    }
+                  }
+
+                  Rectangle {
+                    visible: root.storageRows(storageHost).length === 0 && storageHost && storageHost.status === "online"
+                    width: Style.space(72)
+                    height: Style.space(44)
+                    radius: Style.space(6)
+                    color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.06)
+                    border.width: 1
+                    border.color: Color.popups.border
+
+                    Text {
+                      anchors.centerIn: parent
+                      text: "—"
+                      color: Color.muted
+                      font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                      font.pixelSize: Style.font.body
+                      font.bold: true
+                      renderType: Text.NativeRendering
+                    }
+                  }
                 }
               }
 
