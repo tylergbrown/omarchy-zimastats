@@ -408,34 +408,9 @@ BarWidget {
     contentWidth: popup.fittedContentWidth(Style.space(390))
     contentHeight: popup.fittedContentHeight(bodyCol.implicitHeight, Style.space(420))
 
-    // Soft vertical wash over the card content area
-    Rectangle {
-      anchors.fill: parent
-      z: 0
-      gradient: Gradient {
-        GradientStop {
-          position: 0.0
-          color: Qt.rgba(
-            Math.min(1, Color.popups.background.r + 0.07),
-            Math.min(1, Color.popups.background.g + 0.07),
-            Math.min(1, Color.popups.background.b + 0.09),
-            1)
-        }
-        GradientStop {
-          position: 1.0
-          color: Qt.rgba(
-            Math.max(0, Color.popups.background.r * 0.82),
-            Math.max(0, Color.popups.background.g * 0.82),
-            Math.max(0, Color.popups.background.b * 0.86),
-            1)
-        }
-      }
-    }
-
     Flickable {
       id: bodyScroll
       anchors.fill: parent
-      z: 1
       contentWidth: width
       contentHeight: bodyCol.implicitHeight
       clip: true
@@ -498,9 +473,18 @@ BarWidget {
             width: bodyCol.width
             implicitHeight: cardCol.implicitHeight + Style.space(14)
             radius: Style.space(6)
-            color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.08)
             border.width: 1
             border.color: root.toneFor(modelData.status)
+            gradient: Gradient {
+              GradientStop {
+                position: 0.0
+                color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.11)
+              }
+              GradientStop {
+                position: 1.0
+                color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.04)
+              }
+            }
 
             Column {
               id: cardCol
